@@ -4,7 +4,6 @@ public class GenericSet<E extends Comparable<E>>{
 	//data fields
 	//set cannot have two of the same value
 	private E[] set;
-	private int index = 0; 
 	private int size = 0; //represents number of elements in the set
 	
 	public GenericSet() {
@@ -29,17 +28,18 @@ public class GenericSet<E extends Comparable<E>>{
 		}
 	}
 	
-	public GenericSet(E set) {
-		for(int i = 0; i < this.set.length; i++) {
-			set = this.set[i];
-		}
-	}
+	//fix deep copy constructor
+//	public GenericSet(GenericSet set) { 
+//		for(int i = 0; i < this.set.length; i++) {
+//			set = this.set[i];
+//		}
+//	}
 
 	//check if value exist
 	public boolean exist(E value) {
 		for(int i = 0; i < set.length; i++) {
 			if(set[i]== null) {
-				return false;
+				//do nothing
 			} else if(set[i].compareTo(value) == 0){
 				return true;
 			}
@@ -52,133 +52,95 @@ public class GenericSet<E extends Comparable<E>>{
 		//if value doesn't exist add it
 		if(!exist(value)) {
 			//resize if array gets full
-			if(this.size >= set.length) {
-				resize()[set.length + 1] = value;
-				index++;
+			if(size ==  set.length) {
+				set = resize();
+				set[size] = value;
+				addValue();
 			} else {
-				set[index] = value;
-				index++;
+				set[size] = value;
 				addValue();
 			}
 		}
-//		for(int i = 0; i < this.set.length; i++) {
-//			if(set[i] == null) {
-//				set[i] = value;
-//			}
-//		}
 	}
 	
 	public void addAll(E... values) {
-		int index = 0;
-		int valueIndex = 0;
-		
-		//find where the last value in the set is
-		for (int i = 0; i < set.length; i++) {
-			index++;
-			if(set[i] != null) {
-				index = i;
-			}
-		}
-		
-		//find out the length of the values
 		for(int i = 0; i < values.length; i++) {
-			valueIndex++;
-		}
-		
-		//resize if the values being added will be out of bounds
-		if ((index + valueIndex) >= set.length) {
-			resize();
-		}
-		
-		for(int i = index; i < set.length; i++) {
-			int j = 0;
-			if (!exist(values[i])) {
-				set[i] = values[j];
+			if(!exist(values[i])) {
+				add(values[i]);
 			}
-			j++;
 		}
 	}
 	
 	public void remove(E value) {
-		E[] temp = (E[])(new Comparable[set.length]);
-		int placeHolder = 0;
-		int nullValue = 0;
-		
-		//check to see if value exist
-		while(exist(value)) {
+		if(size == 1 && exist(value)) {
+			set[0] = null;
+			size--;
+		}
+		if(exist(value)) {
+			int hold = 0;
 			for(int i = 0; i < set.length; i++) {
-				//if value found equal that index to null
-				if((set[i].compareTo(value)) == 0) {
+				if(set[i] != null && set[i].compareTo(value) == 0) {
 					set[i] = null;
-					placeHolder = i;
-					break;
+					hold = i;
+				}
+			}
+
+			leftRotate(set, hold);
+			size--;
+		}
+	}
+
+	//left rotate
+	void leftRotate(E[] set, int index) {
+		E[] temp = (E[])(new Comparable[set.length]);
+		
+		//copying elements after index into temp
+		int count = 0;
+		for(int i = index + 1; i < set.length; i++) {
+			if (count < size) {
+				temp[count] = set[i];
+				count++;
+			}
+		}
+		
+		int traverse = 0;
+		for(int i = index; i < set.length; i++) {
+			if (traverse < count) {
+				set[i] = temp[traverse];
+				traverse++;
+			}
+		}
+	}
+
+
+	public void removeAll(E... values) {
+		if(size == 1) {
+			for(int i = 0; i < set.length; i++) {
+				if(exist(values[i])) {
+					set[0] = null;
+					size--;
 				}
 			}
 		}
 		
-		//shift element to the left
-		for(int i = 0; i < set.length; i++) {
-			if(i >= placeHolder && i < size - 1) {
-				temp[i] = set[i + 1];
-			} else {
-				temp[i] = set[i];
-			}
-		}
-		
-		//make main set equal the shifted array
-		for (int i = 0; i < set.length; i++) {
-			set[i] = temp[i];
-		}
-		
-		//find first null value for new set
-		for(int i = 0; i < set.length; i++) {
-			if(set[i] ==null) {
-				nullValue = 1;
-				index--;
-				break;
-			} else if (i >= set.length) {
-				nullValue = set.length - 1;
-			}
-		}
-		set[nullValue - 1] = null;
-		removeValue();
-	}
-	
-	public void removeAll(E... values) {
-		int index = 0;
-		int valueIndex = 0;
-		
-		//find where the last value in the set is 
-		for(int i = 0; i < set.length; i++) {
-			index++;
-			if(set[i] != null) {
-				index = i;
-			}
-		}
-		
-		//find out the length of the values
 		for(int i = 0; i < values.length; i++) {
-			valueIndex++;
-		}
-		
-		//remove array if it matches the set
-		for(int i = 0; i < set.length; i++) {
 			if(exist(values[i])) {
-				set[i] = null;
+				int hold = 0;
+				for(int j = 0; j < set.length; j++) {
+					if(set[j] != null && set[j].compareTo(values[i]) == 0) {
+						set[j] = null;
+						hold = j;
+					}
+				}
+				leftRotate(set, hold);
+				size--;
 			}
 		}
 	}
 	
 	public E get(int index) {
-		try {
-			for(int i = 0; i < set.length; i++) {
-				if(i == index) {
-					return set[i];
-				}
-			}
-		}
-		catch(IndexOutOfBoundsException ex) {
-			ex.printStackTrace();
+		if(set[index] != null) {
+			return set[index];
 		}
 		return null;
 	}
@@ -208,10 +170,10 @@ public class GenericSet<E extends Comparable<E>>{
 	}
 	
 	private E[] resize() {
-		int size = this.set.length * 2;
+		int size = set.length * 2;
 		E[] newSet = (E[])(new Comparable[size]);
 		
-		for(int i = 0; i < this.set.length; i++) {
+		for(int i = 0; i < set.length; i++) {
 			newSet[i] = this.set[i];
 		}
 		return newSet;
