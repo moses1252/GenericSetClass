@@ -29,10 +29,14 @@ public class GenericSet<E extends Comparable<E>>{
 	}
 	
 	//fix deep copy constructor
-//	public GenericSet(GenericSet set) { 
-//		for(int i = 0; i < this.set.length; i++) {
-//			set = this.set[i];
-//		}
+//	public GenericSet(GenericSet sample) { 
+//		size = sample.size;
+////		this.addAll((E[]) sample.set);
+////		for(int i = 0; i < sample.set.length; i++) {
+////			if(sample.set[i] != null) {
+////				set[i] = (E) sample.set[i];
+////			}
+////		}
 //	}
 
 	//check if value exist
